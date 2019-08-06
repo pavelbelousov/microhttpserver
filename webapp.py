@@ -1,6 +1,12 @@
 import socket
 
 class WebApp():
+    http_response_template = (
+        'HTTP/1.1 {2} {3}\r\n'
+        'Content-Type: text/html; charset=utf-8\r\n'
+        'Content-Length: {1}\r\n'
+        'Connection: close\r\n\r\n{0}')
+
     def __init__(self, address, port, handlers):
         self.binding_address = socket.getaddrinfo(address, port)[0][-1]
         self.socket = socket.socket()
@@ -17,7 +23,9 @@ class WebApp():
             print('{0}:{1} {2} {3}'.format(address[0], address[1], method, path))
             if method != 'GET' and body is not None:
                 print(body + '\r\n')
-            response = self.get_response(method, path, body)
+            status_code, content_length, response = self.get_response(method, path, body)
+            print('{0} {1}, {2} bytes'.format(
+                status_code, self.get_status_code_reason(status_code), content_length))
             socket.send(response.encode('utf-8'))
             socket.close()
 
@@ -26,12 +34,9 @@ class WebApp():
             status_code, response_content = self.handlers[path, method](method, path, body)
         else:
             status_code, response_content = self.default_handler(method, path, body)
-        return '''HTTP/1.1 {2} {3}
-Content-Type: text/html; charset=utf-8
-Content-Length: {1}
-Connection: close
-
-{0}'''.format(response_content, len(response_content), status_code, self.get_status_code_reason(status_code))
+        content_length = len(response_content)
+        return status_code, content_length, self.http_response_template.format(
+            response_content, content_length, status_code, self.get_status_code_reason(status_code))
 
     def default_handler(self, method, path, body):
         return 404, '<h3>{0} {1} has no handler</h3>'.format(method, path)
