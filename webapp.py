@@ -22,8 +22,8 @@ class WebApp():
             socket.close()
 
     def get_response(self, method, path, body):
-        if path in self.handlers:
-            status_code, response_content = self.handlers[path](method, path, body)
+        if (path, method) in self.handlers:
+            status_code, response_content = self.handlers[path, method](method, path, body)
         else:
             status_code, response_content = self.default_handler(method, path, body)
         return '''HTTP/1.1 {2} {3}

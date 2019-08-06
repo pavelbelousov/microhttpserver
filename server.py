@@ -5,8 +5,8 @@ def say(method, path, body):
     return 200, message
 
 handlers = {
-    '/': lambda method, path, body: (200, "<h3>Home</h3>"),
-    '/say': say
+    ('/', 'GET'): lambda method, path, body: (200, "<h3>Home</h3>"),
+    ('/say', 'POST'): say
 }
 
 def main():
